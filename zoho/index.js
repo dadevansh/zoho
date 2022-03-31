@@ -1,6 +1,7 @@
 const validator = require('./validator.js')
 const controller = require('./controller.js')
 
-app.get('/getcode',validator.vali ,controller.getcode)
+app.post('/getdata', validator.vali, controller.getdata)
+app.get('/getcode',controller.getcode)
 app.get('/', controller.code)
-app.post('/gettoken', validator.vali , controller.gettoken);
+app.post('/gettoken',controller.gettoken);

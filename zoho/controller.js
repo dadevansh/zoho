@@ -1,10 +1,32 @@
 const axios = require("axios");
 const { redirect } = require("express/lib/response");
 const mysql = require('mysql');
+var bodyParser = require('body-parser')
+
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
 exports.gettoken = gettoken;
 exports.getcode = getcode;
 exports.code = code;
+exports.getdata = getdata;
+
+async function getdata(req, res){
+    try{
+        console.log(req.body);
+
+        let posts = {client_id: req.body.client_id, client_secret: req.body.client_secret, api_key: req.body.api_key, org_id: req.body.org_id, refresh_token: req.body.refresh_token};
+        let sql = 'INSERT INTO zoho SET ?';
+        db.query(sql, posts, (err, result) => {
+            if(err) throw err;
+            console.log(result);
+            res.send(result);
+        })
+    }
+    catch(err){
+        console.log(err);
+    }
+}
 
 async function getcode(req, res){
     try{

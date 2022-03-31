@@ -4,7 +4,7 @@ const validator = require('../middleware')
 const vali = (req, res, next) => {
     console.log(req.body);
     const validationRule = {
-        "client_id": "string",
+        "client_id": "required|string",
         "client_secret": "string",
         "user_id": "number",
         "api_key": "string",
