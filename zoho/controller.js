@@ -48,6 +48,10 @@ async function gettoken(req, res){
         let url=``;
         let sql = 'select * from zoho where user_id = 1';
         db.query(sql, async (err, result) =>{
+            if(result.length != 6) {
+                console.log("database error")
+                return;
+            }
             if(err) console.log(err);
 
             url = `https://accounts.zoho.in/oauth/v2/token?refresh_token=${result[0].refrest_token}&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&grant_type=refresh_token`;
