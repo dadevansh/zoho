@@ -10,6 +10,7 @@ exports.gettoken = gettoken;
 exports.getcode = getcode;
 exports.code = code;
 exports.getdata = getdata;
+exports.createtask = createtask;
 
 async function getdata(req, res){
     try{
@@ -86,6 +87,43 @@ async function gettoken(req, res){
         })
     } 
     catch (err){
+        console.log(err);
+    }
+}
+
+async function createtask(req, res) {
+    try{
+        body = {
+            "api_key": req.body.api_key,
+            "order_id": req.body.order_id,
+            "team_id": req.body.team_id,
+            "auto_assignment": req.body.auto_assignment,
+            "job_description": req.body.job_description,
+            "job_pickup_phone": req.body.job_pickup_phone,
+            "job_pickup_name": req.body.job_pickup_name,
+            "job_pickup_address": req.body.job_pickup_address,
+            "job_pickup_latitude": req.body.job_pickup_latitude,
+            "job_pickup_longitude": req.body.job_pickup_longitude,
+            "job_pickup_datetime": req.body.job_pickup_datetime,
+            "customer_username": req.body.customer_username,
+            "customer_phone": req.body.customer_phone,
+            "customer_address": req.body.customer_address,
+            "latitude": req.body.latitude,
+            "longitude": req.body.longitude,
+            "job_delivery_datetime": req.body.job_delivery_datetime,
+            "has_pickup": req.body.has_pickup,
+            "has_delivery": req.body.has_delivery,
+            "layout_type": req.body.layout_type,
+            "tracking_link": req.body.tracking_link,
+            "timezone": req.body.timezone,
+            "geofence": req.body.geofence,
+            "ride_type": req.body.ride_type
+        }
+
+        res = await axios.post("https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task", body)  
+        console.log(res) 
+    }
+    catch(err){
         console.log(err);
     }
 }
