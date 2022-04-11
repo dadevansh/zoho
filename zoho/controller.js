@@ -1,7 +1,8 @@
 const axios = require("axios");
-const { redirect } = require("express/lib/response");
-const mysql = require('mysql');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+const request = require('request');
+const servies = require('../services.js')
+
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -17,12 +18,8 @@ async function getdata(req, res){
         console.log(req.body);
 
         let posts = {client_id: req.body.client_id, client_secret: req.body.client_secret, api_key: req.body.api_key, org_id: req.body.org_id, refresh_token: req.body.refresh_token};
-        let sql = 'INSERT INTO zoho SET ?';
-        db.query(sql, posts, (err, result) => {
-            if(err) throw err;
-            console.log(result);
-            res.send(result);
-        })
+        let result = await servies.putKeys('zoho', posts);
+        res.send(result)
     }
     catch(err){
         console.log(err);
@@ -31,16 +28,9 @@ async function getdata(req, res){
 
 async function getcode(req, res){
     try{
-        let a = '1';
-        let url;
-        let sql = `select * from zoho where user_id = ${a}`;
-        db.query(sql, (err, result) =>{
-            if(err) console.log(err);
-            
-            url = `https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=${result[0].client_id}&scope=ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all&redirect_uri=https://90ad-103-16-30-142.ngrok.io&access_type=offline`;
-            return res.redirect(url)
-        })
-        
+        let result = await servies.getKeys('zoho', '1');
+        url = `https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=${result[0].client_id}&scope=ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all&redirect_uri=https://a470-103-158-91-7.ngrok.io&access_type=offline`;
+        return res.redirect(url)
     }
     catch(err){
         console.log(err);
@@ -50,35 +40,40 @@ async function getcode(req, res){
 async function code(req, res){
     try{
         const access_code = req.query.code;
-        let sql = 'select * from zoho where user_id = 1';
-            db.query(sql, (err, result) => {
-                callback(result, access_code)
-            })
-    }
-    catch(err){
-        console.log(err);
-    }
-}
-
-async function callback(req, access_code){
-    try{
-        url = `https://accounts.zoho.in/oauth/v2/token?grant_type=authorization_code&client_id=${req[0].client_id}&client_secret=${req[0].client_secret}&redirect_uri=https://90ad-103-16-30-142.ngrok.io&code=${access_code}`;
-                res = await axios.post(url)
-                const access_token = res.data.access_token;
+        let result = await servies.getKeys('zoho', '1');
+        url = `https://accounts.zoho.in/oauth/v2/token?grant_type=authorization_code&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&redirect_uri=https://a470-103-158-91-7.ngrok.io&code=${access_code}`;
+            console.log(url);
+            const options = {
+                url: url,
+                method: 'POST',
+            }
+            request(options, function(err, res, body){
+                body = JSON.parse(body);
+                const access_token = body.access_token;    
                 console.log("lsjlsd---------->>>" + access_token);
-
-                let rere;
-                body = {
-                    "url":"https://90ad-103-16-30-142.ngrok.io/createtask",
-                    "events": ["salesorder.created"]
-                }
-                rere = await axios.post("https://commerce.zoho.in/store/api/v1/settings/webhooks", body, {
+                const options2 = {
+                    url: "https://commerce.zoho.in/store/api/v1/settings/webhooks",
+                    method: 'POST',
                     header: { 
                         'Content-Type'  : 'application/json',
                         'Authorization' : `Zoho-oauthtoken ${access_token}`,
-                        'X-com-zoho-store-organizationid' : req[0].org_id
-                    }
+                        'X-com-zoho-store-organizationid' : result[0].org_id
+                    },
+                    body : {
+                        "url":"https://a470-103-158-91-7.ngrok.io/createtask",
+                        "events": [
+                            "salesorder.created"
+                        ]
+                    },
+                    json: true
+                }
+                console.log(options2);
+                request(options2, function(err, res, body){
+                    console.log("hererererer---------");
+                    // body = JSON.parse(body)
+                    console.log(body);
                 })
+            })
     }
     catch(err){
         console.log(err);
@@ -139,7 +134,7 @@ async function createtask(req, res) {
         // }
 
         // res = await axios.post("https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task", body)  
-        // console.log(res) 
+        console.log(req.body) 
     }
     catch(err){
         console.log(err);
