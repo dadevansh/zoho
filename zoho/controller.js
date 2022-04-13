@@ -98,18 +98,18 @@ async function gettoken(req, res){
 
 async function createtask(req, res) {
     try{
-        console.log(req.body.JSONString);
+        let result = await servies.getKeys('zoho', '1')
         body = JSON.parse(req.body.JSONString);
         let data = body.salesorder;
         let customer_address = data.shipping_address.address + ", " + data.shipping_address.street2 + ", " + data.shipping_address.city + ", " + data.shipping_address.state + ", " + data.shipping_address.zip + ", " + data.shipping_address.country;
         let customer_name = data.contact_person_details[0].first_name + data.contact_person_details[0].last_name;
         body = {
-            "api_key": '2b997be77e2cc22becfd4c66426ef504',
+            "api_key": result[0].api_key,
             "order_id": data.salesorder_number,
             "customer_username": customer_name,
             "customer_phone": data.contact_person_details[0].phone,
             "customer_address": customer_address,
-            "job_pickup_address": "add1",
+            "job_pickup_address": result[0].pickup_add,
             "job_delivery_datetime": data.date,
             "has_pickup": '0',
             "has_delivery": '1',
@@ -118,7 +118,7 @@ async function createtask(req, res) {
             "tracking_link": '1'
         }
         const options = {
-            url: 'https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task',
+            url: 'https://api.tookanapp.com/v2/create_task',
             method: 'POST',
             body: body,
             json: true
