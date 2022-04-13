@@ -109,6 +109,13 @@ async function createtask(req, res) {
             "customer_username": customer_name,
             "customer_phone": data.contact_person_details[0].phone,
             "customer_address": customer_address,
+            "job_pickup_address": "add1",
+            "job_delivery_datetime": data.date,
+            "has_pickup": '0',
+            "has_delivery": '1',
+            "layout_type": '0',
+            "timezone":"-330",
+            "tracking_link": '1'
         }
         const options = {
             url: 'https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task',
