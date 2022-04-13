@@ -1,7 +1,9 @@
 const mysql = require('mysql');
+const request = require('request');
 
 exports.putKeys = putKeys;
 exports.getKeys = getKeys;
+exports.sendReq = sendReq;
 
 function putKeys(table, posts){
     return new Promise((resolve, reject) =>{
@@ -19,6 +21,18 @@ function getKeys(table, id){
         db.query(sql, (err, result)=>{
             if(err) reject(err);
             resolve(result);
+        })
+    })
+}
+
+function sendReq(options){
+    return new Promise((resolve, reject)=>{
+        request(options, function(err, res, body){
+            if(err){
+                console.log(err);
+                reject(err);
+            } 
+            resolve(body);
         })
     })
 }

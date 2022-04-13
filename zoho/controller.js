@@ -29,7 +29,7 @@ async function getdata(req, res){
 async function getcode(req, res){
     try{
         let result = await servies.getKeys('zoho', '1');
-        url = `https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=${result[0].client_id}&scope=ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all&redirect_uri=https://a470-103-158-91-7.ngrok.io&access_type=offline`;
+        url = `https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=${result[0].client_id}&scope=ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all&redirect_uri=https://6ddf-103-158-91-7.ngrok.io`;
         return res.redirect(url)
     }
     catch(err){
@@ -41,7 +41,7 @@ async function code(req, res){
     try{
         const access_code = req.query.code;
         let result = await servies.getKeys('zoho', '1');
-        url = `https://accounts.zoho.in/oauth/v2/token?grant_type=authorization_code&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&redirect_uri=https://a470-103-158-91-7.ngrok.io&code=${access_code}`;
+        url = `https://accounts.zoho.in/oauth/v2/token?grant_type=authorization_code&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&redirect_uri=https://6ddf-103-158-91-7.ngrok.io&code=${access_code}`;
             console.log(url);
             const options = {
                 url: url,
@@ -54,13 +54,13 @@ async function code(req, res){
                 const options2 = {
                     url: "https://commerce.zoho.in/store/api/v1/settings/webhooks",
                     method: 'POST',
-                    header: { 
+                    headers: { 
                         'Content-Type'  : 'application/json',
-                        'Authorization' : `Zoho-oauthtoken ${access_token}`,
-                        'X-com-zoho-store-organizationid' : result[0].org_id
+                        "Authorization" : `Zoho-oauthtoken ${access_token}`,
+                        // 'X-com-zoho-store-organizationid' : result[0].org_id
                     },
                     body : {
-                        "url":"https://a470-103-158-91-7.ngrok.io/createtask",
+                        "url":"https://6ddf-103-158-91-7.ngrok.io/createtask",
                         "events": [
                             "salesorder.created"
                         ]
@@ -71,6 +71,7 @@ async function code(req, res){
                 request(options2, function(err, res, body){
                     console.log("hererererer---------");
                     // body = JSON.parse(body)
+                    console.log(err);
                     console.log(body);
                 })
             })
@@ -82,22 +83,13 @@ async function code(req, res){
 
 async function gettoken(req, res){
     try{
-        let url=``;
-        let sql = 'select * from zoho where user_id = 1';
-        db.query(sql, async (err, result) =>{
-            if(result.length != 6) {
-                console.log("database error")
-                return;
-            }
-            if(err) console.log(err);
-
-            url = `https://accounts.zoho.in/oauth/v2/token?refresh_token=${result[0].refrest_token}&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&grant_type=refresh_token`;
+        let result = await servies.getKeys('zoho', '1');
+        url = `https://accounts.zoho.in/oauth/v2/token?refresh_token=${result[0].refrest_token}&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&grant_type=refresh_token`;
             res = await axios.post(url)
             const access_token = res.data.access_token;
 
             let rere;
             rere = await axios.post("https://webhook.site/b5ac3564-0240-461d-b4ad-87f4e33e55b1", access_token)
-        })
     } 
     catch (err){
         console.log(err);
@@ -106,35 +98,29 @@ async function gettoken(req, res){
 
 async function createtask(req, res) {
     try{
-        // body = {
-        //     "api_key": req.body.api_key,
-        //     "order_id": req.body.order_id,
-        //     "team_id": req.body.team_id,
-        //     "auto_assignment": req.body.auto_assignment,
-        //     "job_description": req.body.job_description,
-        //     "job_pickup_phone": req.body.job_pickup_phone,
-        //     "job_pickup_name": req.body.job_pickup_name,
-        //     "job_pickup_address": req.body.job_pickup_address,
-        //     "job_pickup_latitude": req.body.job_pickup_latitude,
-        //     "job_pickup_longitude": req.body.job_pickup_longitude,
-        //     "job_pickup_datetime": req.body.job_pickup_datetime,
-        //     "customer_username": req.body.customer_username,
-        //     "customer_phone": req.body.phone,
-        //     "customer_address": req.body.customer_address,
-        //     "latitude": req.body.latitude,
-        //     "longitude": req.body.longitude,
-        //     "job_delivery_datetime": req.body.job_delivery_datetime,
-        //     "has_pickup": req.body.has_pickup,
-        //     "has_delivery": req.body.has_delivery,
-        //     "layout_type": req.body.layout_type,
-        //     "tracking_link": req.body.tracking_link,
-        //     "timezone": req.body.timezone,
-        //     "geofence": req.body.geofence,
-        //     "ride_type": req.body.ride_type
-        // }
-
-        // res = await axios.post("https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task", body)  
-        console.log(req.body) 
+        console.log(req.body.JSONString);
+        body = JSON.parse(req.body.JSONString);
+        let data = body.salesorder;
+        let customer_address = data.shipping_address.address + ", " + data.shipping_address.street2 + ", " + data.shipping_address.city + ", " + data.shipping_address.state + ", " + data.shipping_address.zip + ", " + data.shipping_address.country;
+        let customer_name = data.contact_person_details[0].first_name + data.contact_person_details[0].last_name;
+        body = {
+            "api_key": '2b997be77e2cc22becfd4c66426ef504',
+            "order_id": data.salesorder_number,
+            "customer_username": customer_name,
+            "customer_phone": data.contact_person_details[0].phone,
+            "customer_address": customer_address,
+        }
+        const options = {
+            url: 'https://private-anon-ca7028cd66-tookanapi.apiary-mock.com/v2/create_task',
+            method: 'POST',
+            body: body,
+            json: true
+        }
+        console.log(options);
+        let output;
+        output = await servies.sendReq(options);
+        console.log(output);
+        res.send(output);
     }
     catch(err){
         console.log(err);
