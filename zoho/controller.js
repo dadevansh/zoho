@@ -1,5 +1,6 @@
 const axios = require("axios");
 var bodyParser = require('body-parser');
+const config = require("config");
 const request = require('request');
 const servies = require('../services.js')
 
@@ -7,18 +8,18 @@ const servies = require('../services.js')
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-exports.gettoken = gettoken;
-exports.getcode = getcode;
-exports.code = code;
+exports.oauthLogin = oauthLogin;
+exports.oauthSuccess = oauthSuccess;
 exports.getdata = getdata;
 exports.createtask = createtask;
 
 async function getdata(req, res){
     try{
-        console.log(req.body);
-
-        let posts = {client_id: req.body.client_id, client_secret: req.body.client_secret, api_key: req.body.api_key, org_id: req.body.org_id, refresh_token: req.body.refresh_token};
-        let result = await servies.putKeys('zoho', posts);
+        let data = {
+            client_id: req.body.client_id, 
+            client_secret: req.body.client_secret, 
+            api_key: req.body.api_key, org_id: req.body.org_id, refresh_token: req.body.refresh_token};
+        let result = await servies.putKeys('zoho', data);
         res.send(result)
     }
     catch(err){
@@ -26,10 +27,11 @@ async function getdata(req, res){
     }
 }
 
-async function getcode(req, res){
+async function oauthLogin(req, res){
     try{
+        const client_id = result[0].client_id;
         let result = await servies.getKeys('zoho', '1');
-        url = `https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=${result[0].client_id}&scope=ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all&redirect_uri=https://6ddf-103-158-91-7.ngrok.io`;
+        url = `${config.get(grantCodeUrl)}&client_id=${client_id}&scope=${config.get("scope")}&redirect_uri=${config.get("redirectURL")}`;
         return res.redirect(url)
     }
     catch(err){
@@ -37,11 +39,14 @@ async function getcode(req, res){
     }
 }
 
-async function code(req, res){
+async function oauthSuccess(req, res){
     try{
         const access_code = req.query.code;
         let result = await servies.getKeys('zoho', '1');
-        url = `https://accounts.zoho.in/oauth/v2/token?grant_type=authorization_code&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&redirect_uri=https://6ddf-103-158-91-7.ngrok.io&code=${access_code}`;
+        const client_id = result[0].client_id;
+        const client_secret = result[0].client_secret;
+        const location = decodeURI(req.query.location);
+        url = `https://accounts.zoho.${location}/oauth/v2/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${config.get("redirectURL")}&code=${access_code}`;
             console.log(url);
             const options = {
                 url: url,
@@ -49,18 +54,16 @@ async function code(req, res){
             }
             request(options, function(err, res, body){
                 body = JSON.parse(body);
-                const access_token = body.access_token;    
-                console.log("lsjlsd---------->>>" + access_token);
+                const access_token = body.access_token;
                 const options2 = {
-                    url: "https://commerce.zoho.in/store/api/v1/settings/webhooks",
+                    url: `https://commerce.zoho.${location}${webhook}`,
                     method: 'POST',
                     headers: { 
                         'Content-Type'  : 'application/json',
                         "Authorization" : `Zoho-oauthtoken ${access_token}`,
-                        // 'X-com-zoho-store-organizationid' : result[0].org_id
                     },
                     body : {
-                        "url":"https://6ddf-103-158-91-7.ngrok.io/createtask",
+                        "url":`${config.get("redirectURL")}/createtask`,
                         "events": [
                             "salesorder.created"
                         ]
@@ -69,29 +72,12 @@ async function code(req, res){
                 }
                 console.log(options2);
                 request(options2, function(err, res, body){
-                    console.log("hererererer---------");
-                    // body = JSON.parse(body)
                     console.log(err);
                     console.log(body);
                 })
             })
     }
     catch(err){
-        console.log(err);
-    }
-}
-
-async function gettoken(req, res){
-    try{
-        let result = await servies.getKeys('zoho', '1');
-        url = `https://accounts.zoho.in/oauth/v2/token?refresh_token=${result[0].refrest_token}&client_id=${result[0].client_id}&client_secret=${result[0].client_secret}&grant_type=refresh_token`;
-            res = await axios.post(url)
-            const access_token = res.data.access_token;
-
-            let rere;
-            rere = await axios.post("https://webhook.site/b5ac3564-0240-461d-b4ad-87f4e33e55b1", access_token)
-    } 
-    catch (err){
         console.log(err);
     }
 }
@@ -115,10 +101,14 @@ async function createtask(req, res) {
             "has_delivery": '1',
             "layout_type": '0',
             "timezone":"-330",
-            "tracking_link": '1'
+            "tracking_link": '1',
+            "pickup_custom_field_template" : "random1",
+            "pickup_meta_data" : [{
+                "test" : data.balance
+            }]
         }
         const options = {
-            url: 'https://api.tookanapp.com/v2/create_task',
+            url: `${config.get("createTask")}`,
             method: 'POST',
             body: body,
             json: true
