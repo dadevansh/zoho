@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 const config = require("config");
 const request = require('request');
 const servies = require('../services.js')
+const message = require('../message.js')
 
 
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -103,7 +104,7 @@ async function createtask(req, res) {
             "timezone":"-330",
             "tracking_link": '1',
             "pickup_custom_field_template" : "random1",
-            "pickup_meta_data" : [{
+            "meta_data" : [{
                 "test" : data.balance
             }]
         }
@@ -116,6 +117,7 @@ async function createtask(req, res) {
         console.log(options);
         let output;
         output = await servies.sendReq(options);
+        message = await message.sendMessage();
         console.log(output);
         res.send(output);
     }
