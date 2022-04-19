@@ -1,4 +1,5 @@
 var request = require('request');
+const config = require('config');
 exports.sendMessage = sendMessage;
 
 function sendMessage(){
@@ -6,7 +7,7 @@ function sendMessage(){
         'method': 'POST',
         'url': 'https://api.releans.com/v2/message',
         'headers': {
-          'Authorization': 'Bearer 8ac6646678a04124790854d2346546a4'
+          'Authorization': `Bearer ${config.get("releansKey")}`
         },
         form: {
           'sender': 'dev',

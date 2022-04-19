@@ -57,7 +57,7 @@ async function oauthSuccess(req, res){
                 body = JSON.parse(body);
                 const access_token = body.access_token;
                 const options2 = {
-                    url: `https://commerce.zoho.${location}${webhook}`,
+                    url: `https://commerce.zoho.${location}${config.get("webhook")}`,
                     method: 'POST',
                     headers: { 
                         'Content-Type'  : 'application/json',

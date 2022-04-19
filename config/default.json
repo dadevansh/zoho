@@ -3,5 +3,6 @@
     "scope" : "ZohoCommerce.salesorders.all,ZohoCommerce.webhooks.CREATE,ZohoCommerce.shipmentorders.all",
     "createTask": "https://api.tookanapp.com/v2/create_task",
     "grantCodeUrl" : "https://accounts.zoho.com/oauth/v2/auth?response_type=code",
-    "webhook" : "/store/api/v1/settings/webhooks"
+    "webhook" : "/store/api/v1/settings/webhooks",
+    "releansKey": "8ac6646678a04124790854d2346546a4"
 }
